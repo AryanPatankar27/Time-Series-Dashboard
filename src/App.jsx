@@ -1,268 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
-
-// City metadata
-const cityMetadata = {
-  mumbai: { climate: 'Tropical', monsoon: 'Southwest', region: 'Western Coast', rainfall: 'Very High' },
-  pune: { climate: 'Semi-Arid', monsoon: 'Southwest', region: 'Western Plateau', rainfall: 'Moderate' },
-  bangalore: { climate: 'Tropical Savanna', monsoon: 'Southwest', region: 'Southern Plateau', rainfall: 'Moderate' },
-  chennai: { climate: 'Tropical Wet-Dry', monsoon: 'Northeast', region: 'Eastern Coast', rainfall: 'Moderate' },
-  delhi: { climate: 'Humid Subtropical', monsoon: 'Southwest', region: 'Northern Plains', rainfall: 'Moderate' },
-  kolkata: { climate: 'Tropical Wet', monsoon: 'Southwest', region: 'Eastern Plains', rainfall: 'Very High' },
-  hyderabad: { climate: 'Semi-Arid', monsoon: 'Southwest', region: 'Deccan Plateau', rainfall: 'Moderate' },
-  ahmedabad: { climate: 'Semi-Arid', monsoon: 'Southwest', region: 'Western Plains', rainfall: 'Low' },
-  jaipur: { climate: 'Semi-Arid', monsoon: 'Southwest', region: 'Northwestern Plains', rainfall: 'Low' },
-  lucknow: { climate: 'Humid Subtropical', monsoon: 'Southwest', region: 'Central Plains', rainfall: 'Moderate' },
-  kanpur: { climate: 'Humid Subtropical', monsoon: 'Southwest', region: 'Central Plains', rainfall: 'Moderate' },
-  bhopal: { climate: 'Humid Subtropical', monsoon: 'Southwest', region: 'Central Plateau', rainfall: 'High' },
-  patna: { climate: 'Humid Subtropical', monsoon: 'Southwest', region: 'Eastern Plains', rainfall: 'High' },
-  nagpur: { climate: 'Tropical Wet-Dry', monsoon: 'Southwest', region: 'Central India', rainfall: 'Moderate' },
-  ranchi: { climate: 'Humid Subtropical', monsoon: 'Southwest', region: 'Chota Nagpur Plateau', rainfall: 'High' },
-  jammu: { climate: 'Humid Subtropical', monsoon: 'Southwest', region: 'Himalayan Foothills', rainfall: 'High' },
-  nashik: { climate: 'Semi-Arid', monsoon: 'Southwest', region: 'Western Plateau', rainfall: 'Moderate' }
-};
-
-// All city data embedded
-const cityData = {
-  mumbai: [
-    { month: "Feb'25", water: 8.5, vegetation: 18.2, barren: 8.3, urban: 65.0 },
-    { month: "Mar'25", water: 7.8, vegetation: 16.5, barren: 9.2, urban: 66.5 },
-    { month: "Apr'25", water: 7.2, vegetation: 14.8, barren: 10.5, urban: 67.5 },
-    { month: "May'25", water: 6.8, vegetation: 13.2, barren: 11.8, urban: 68.2 },
-    { month: "Jun'25", water: 12.5, vegetation: 22.5, barren: 7.2, urban: 57.8 },
-    { month: "Jul'25", water: 15.8, vegetation: 28.4, barren: 5.3, urban: 50.5 },
-    { month: "Aug'25", water: 16.2, vegetation: 29.8, barren: 4.8, urban: 49.2 },
-    { month: "Sep'25", water: 14.5, vegetation: 27.3, barren: 6.0, urban: 52.2 },
-    { month: "Oct'25", water: 11.8, vegetation: 23.6, barren: 7.8, urban: 56.8 },
-    { month: "Nov'25", water: 10.2, vegetation: 20.8, barren: 8.5, urban: 60.5 },
-    { month: "Dec'25", water: 9.3, vegetation: 19.4, barren: 8.8, urban: 62.5 },
-    { month: "Jan'26", water: 8.8, vegetation: 18.7, barren: 8.5, urban: 64.0 }
-  ],
-  pune: [
-    { month: "Feb'25", water: 4.2, vegetation: 22.5, barren: 15.8, urban: 57.5 },
-    { month: "Mar'25", water: 3.8, vegetation: 20.3, barren: 17.2, urban: 58.7 },
-    { month: "Apr'25", water: 3.2, vegetation: 17.8, barren: 19.5, urban: 59.5 },
-    { month: "May'25", water: 2.8, vegetation: 15.2, barren: 21.8, urban: 60.2 },
-    { month: "Jun'25", water: 8.5, vegetation: 28.6, barren: 12.4, urban: 50.5 },
-    { month: "Jul'25", water: 11.2, vegetation: 35.8, barren: 8.5, urban: 44.5 },
-    { month: "Aug'25", water: 12.5, vegetation: 37.2, barren: 7.8, urban: 42.5 },
-    { month: "Sep'25", water: 10.8, vegetation: 33.5, barren: 9.2, urban: 46.5 },
-    { month: "Oct'25", water: 7.5, vegetation: 28.4, barren: 11.8, urban: 52.3 },
-    { month: "Nov'25", water: 5.8, vegetation: 25.6, barren: 13.5, urban: 55.1 },
-    { month: "Dec'25", water: 4.8, vegetation: 23.8, barren: 14.7, urban: 56.7 },
-    { month: "Jan'26", water: 4.5, vegetation: 23.1, barren: 15.2, urban: 57.2 }
-  ],
-  bangalore: [
-    { month: "Feb'25", water: 6.5, vegetation: 32.8, barren: 12.2, urban: 48.5 },
-    { month: "Mar'25", water: 5.8, vegetation: 30.2, barren: 14.5, urban: 49.5 },
-    { month: "Apr'25", water: 5.2, vegetation: 27.5, barren: 16.8, urban: 50.5 },
-    { month: "May'25", water: 4.5, vegetation: 24.8, barren: 19.2, urban: 51.5 },
-    { month: "Jun'25", water: 8.2, vegetation: 35.5, barren: 11.8, urban: 44.5 },
-    { month: "Jul'25", water: 9.8, vegetation: 38.2, barren: 9.5, urban: 42.5 },
-    { month: "Aug'25", water: 10.5, vegetation: 39.8, barren: 8.7, urban: 41.0 },
-    { month: "Sep'25", water: 9.5, vegetation: 37.5, barren: 10.2, urban: 42.8 },
-    { month: "Oct'25", water: 8.8, vegetation: 36.2, barren: 11.5, urban: 43.5 },
-    { month: "Nov'25", water: 7.8, vegetation: 34.5, barren: 12.8, urban: 44.9 },
-    { month: "Dec'25", water: 7.2, vegetation: 33.6, barren: 12.5, urban: 46.7 },
-    { month: "Jan'26", water: 6.8, vegetation: 33.0, barren: 12.3, urban: 47.9 }
-  ],
-  chennai: [
-    { month: "Feb'25", water: 7.8, vegetation: 18.5, barren: 14.2, urban: 59.5 },
-    { month: "Mar'25", water: 7.2, vegetation: 16.8, barren: 16.5, urban: 59.5 },
-    { month: "Apr'25", water: 6.5, vegetation: 14.5, barren: 18.8, urban: 60.2 },
-    { month: "May'25", water: 5.8, vegetation: 12.8, barren: 21.2, urban: 60.2 },
-    { month: "Jun'25", water: 7.5, vegetation: 16.5, barren: 17.5, urban: 58.5 },
-    { month: "Jul'25", water: 8.2, vegetation: 18.2, barren: 15.8, urban: 57.8 },
-    { month: "Aug'25", water: 8.8, vegetation: 19.5, barren: 14.5, urban: 57.2 },
-    { month: "Sep'25", water: 9.5, vegetation: 20.8, barren: 13.2, urban: 56.5 },
-    { month: "Oct'25", water: 11.5, vegetation: 24.5, barren: 11.5, urban: 52.5 },
-    { month: "Nov'25", water: 13.2, vegetation: 26.8, barren: 9.8, urban: 50.2 },
-    { month: "Dec'25", water: 11.8, vegetation: 24.2, barren: 11.5, urban: 52.5 },
-    { month: "Jan'26", water: 9.5, vegetation: 21.5, barren: 13.2, urban: 55.8 }
-  ],
-  delhi: [
-    { month: "Feb'25", water: 3.5, vegetation: 22.5, barren: 18.5, urban: 55.5 },
-    { month: "Mar'25", water: 3.2, vegetation: 21.2, barren: 20.8, urban: 54.8 },
-    { month: "Apr'25", water: 2.8, vegetation: 18.5, barren: 23.5, urban: 55.2 },
-    { month: "May'25", water: 2.5, vegetation: 15.8, barren: 26.2, urban: 55.5 },
-    { month: "Jun'25", water: 3.8, vegetation: 19.5, barren: 22.2, urban: 54.5 },
-    { month: "Jul'25", water: 6.5, vegetation: 28.5, barren: 15.5, urban: 49.5 },
-    { month: "Aug'25", water: 7.8, vegetation: 32.2, barren: 12.8, urban: 47.2 },
-    { month: "Sep'25", water: 6.8, vegetation: 29.5, barren: 14.5, urban: 49.2 },
-    { month: "Oct'25", water: 5.2, vegetation: 26.8, barren: 16.8, urban: 51.2 },
-    { month: "Nov'25", water: 4.5, vegetation: 25.2, barren: 18.5, urban: 51.8 },
-    { month: "Dec'25", water: 4.0, vegetation: 24.0, barren: 19.2, urban: 52.8 },
-    { month: "Jan'26", water: 3.8, vegetation: 23.2, barren: 18.8, urban: 54.2 }
-  ],
-  kolkata: [
-    { month: "Feb'25", water: 12.5, vegetation: 28.5, barren: 10.5, urban: 48.5 },
-    { month: "Mar'25", water: 11.8, vegetation: 26.8, barren: 12.2, urban: 49.2 },
-    { month: "Apr'25", water: 10.5, vegetation: 24.5, barren: 14.5, urban: 50.5 },
-    { month: "May'25", water: 9.8, vegetation: 22.8, barren: 16.8, urban: 50.6 },
-    { month: "Jun'25", water: 15.5, vegetation: 32.5, barren: 9.5, urban: 42.5 },
-    { month: "Jul'25", water: 18.2, vegetation: 36.8, barren: 7.2, urban: 37.8 },
-    { month: "Aug'25", water: 19.5, vegetation: 38.5, barren: 6.5, urban: 35.5 },
-    { month: "Sep'25", water: 17.8, vegetation: 36.2, barren: 8.2, urban: 37.8 },
-    { month: "Oct'25", water: 15.5, vegetation: 33.5, barren: 10.2, urban: 40.8 },
-    { month: "Nov'25", water: 14.2, vegetation: 31.8, barren: 11.5, urban: 42.5 },
-    { month: "Dec'25", water: 13.5, vegetation: 30.5, barren: 11.2, urban: 44.8 },
-    { month: "Jan'26", water: 12.8, vegetation: 29.2, barren: 10.8, urban: 47.2 }
-  ],
-  hyderabad: [
-    { month: "Feb'25", water: 5.8, vegetation: 24.5, barren: 16.2, urban: 53.5 },
-    { month: "Mar'25", water: 5.2, vegetation: 22.8, barren: 18.5, urban: 53.5 },
-    { month: "Apr'25", water: 4.5, vegetation: 20.5, barren: 21.2, urban: 53.8 },
-    { month: "May'25", water: 3.8, vegetation: 18.2, barren: 24.5, urban: 53.5 },
-    { month: "Jun'25", water: 6.5, vegetation: 26.5, barren: 18.5, urban: 48.5 },
-    { month: "Jul'25", water: 9.2, vegetation: 32.8, barren: 13.5, urban: 44.5 },
-    { month: "Aug'25", water: 10.5, vegetation: 35.2, barren: 11.8, urban: 42.5 },
-    { month: "Sep'25", water: 9.5, vegetation: 33.5, barren: 13.2, urban: 43.8 },
-    { month: "Oct'25", water: 8.2, vegetation: 30.8, barren: 15.5, urban: 45.5 },
-    { month: "Nov'25", water: 7.2, vegetation: 28.5, barren: 16.8, urban: 47.5 },
-    { month: "Dec'25", water: 6.5, vegetation: 26.8, barren: 17.2, urban: 49.5 },
-    { month: "Jan'26", water: 6.0, vegetation: 25.5, barren: 16.8, urban: 51.7 }
-  ],
-  ahmedabad: [
-    { month: "Feb'25", water: 3.2, vegetation: 16.5, barren: 22.8, urban: 57.5 },
-    { month: "Mar'25", water: 2.8, vegetation: 14.8, barren: 25.2, urban: 57.2 },
-    { month: "Apr'25", water: 2.5, vegetation: 12.5, barren: 28.5, urban: 56.5 },
-    { month: "May'25", water: 2.2, vegetation: 10.8, barren: 31.5, urban: 55.5 },
-    { month: "Jun'25", water: 4.5, vegetation: 15.8, barren: 26.2, urban: 53.5 },
-    { month: "Jul'25", water: 7.8, vegetation: 24.5, barren: 19.2, urban: 48.5 },
-    { month: "Aug'25", water: 9.2, vegetation: 28.8, barren: 16.5, urban: 45.5 },
-    { month: "Sep'25", water: 7.5, vegetation: 26.5, barren: 18.5, urban: 47.5 },
-    { month: "Oct'25", water: 5.5, vegetation: 22.5, barren: 21.2, urban: 50.8 },
-    { month: "Nov'25", water: 4.5, vegetation: 19.8, barren: 23.5, urban: 52.2 },
-    { month: "Dec'25", water: 3.8, vegetation: 18.2, barren: 24.2, urban: 53.8 },
-    { month: "Jan'26", water: 3.5, vegetation: 17.5, barren: 23.5, urban: 55.5 }
-  ],
-  jaipur: [
-    { month: "Feb'25", water: 2.8, vegetation: 14.5, barren: 27.2, urban: 55.5 },
-    { month: "Mar'25", water: 2.5, vegetation: 12.8, barren: 30.2, urban: 54.5 },
-    { month: "Apr'25", water: 2.2, vegetation: 10.5, barren: 33.8, urban: 53.5 },
-    { month: "May'25", water: 1.8, vegetation: 8.5, barren: 37.2, urban: 52.5 },
-    { month: "Jun'25", water: 3.2, vegetation: 12.8, barren: 32.5, urban: 51.5 },
-    { month: "Jul'25", water: 6.5, vegetation: 22.5, barren: 24.5, urban: 46.5 },
-    { month: "Aug'25", water: 8.2, vegetation: 28.8, barren: 20.5, urban: 42.5 },
-    { month: "Sep'25", water: 6.8, vegetation: 26.5, barren: 23.2, urban: 43.5 },
-    { month: "Oct'25", water: 4.8, vegetation: 21.8, barren: 27.2, urban: 46.2 },
-    { month: "Nov'25", water: 3.8, vegetation: 18.5, barren: 29.5, urban: 48.2 },
-    { month: "Dec'25", water: 3.2, vegetation: 16.5, barren: 29.8, urban: 50.5 },
-    { month: "Jan'26", water: 3.0, vegetation: 15.2, barren: 28.5, urban: 53.3 }
-  ],
-  lucknow: [
-    { month: "Feb'25", water: 4.5, vegetation: 26.5, barren: 16.5, urban: 52.5 },
-    { month: "Mar'25", water: 4.0, vegetation: 24.8, barren: 18.8, urban: 52.4 },
-    { month: "Apr'25", water: 3.5, vegetation: 22.5, barren: 21.5, urban: 52.5 },
-    { month: "May'25", water: 3.0, vegetation: 19.8, barren: 24.8, urban: 52.4 },
-    { month: "Jun'25", water: 5.5, vegetation: 25.5, barren: 20.5, urban: 48.5 },
-    { month: "Jul'25", water: 8.5, vegetation: 33.5, barren: 14.5, urban: 43.5 },
-    { month: "Aug'25", water: 10.2, vegetation: 36.8, barren: 12.5, urban: 40.5 },
-    { month: "Sep'25", water: 8.8, vegetation: 34.5, barren: 14.2, urban: 42.5 },
-    { month: "Oct'25", water: 6.8, vegetation: 31.2, barren: 16.5, urban: 45.5 },
-    { month: "Nov'25", water: 5.8, vegetation: 29.5, barren: 17.8, urban: 46.9 },
-    { month: "Dec'25", water: 5.2, vegetation: 28.2, barren: 17.5, urban: 49.1 },
-    { month: "Jan'26", water: 4.8, vegetation: 27.5, barren: 17.2, urban: 50.5 }
-  ],
-  kanpur: [
-    { month: "Feb'25", water: 5.2, vegetation: 24.8, barren: 18.5, urban: 51.5 },
-    { month: "Mar'25", water: 4.8, vegetation: 23.2, barren: 20.5, urban: 51.5 },
-    { month: "Apr'25", water: 4.2, vegetation: 21.5, barren: 22.8, urban: 51.5 },
-    { month: "May'25", water: 3.8, vegetation: 19.2, barren: 25.5, urban: 51.5 },
-    { month: "Jun'25", water: 6.5, vegetation: 24.5, barren: 21.5, urban: 47.5 },
-    { month: "Jul'25", water: 9.5, vegetation: 32.5, barren: 16.5, urban: 41.5 },
-    { month: "Aug'25", water: 11.2, vegetation: 35.8, barren: 14.5, urban: 38.5 },
-    { month: "Sep'25", water: 9.8, vegetation: 33.5, barren: 16.2, urban: 40.5 },
-    { month: "Oct'25", water: 7.5, vegetation: 29.8, barren: 18.8, urban: 43.9 },
-    { month: "Nov'25", water: 6.5, vegetation: 27.5, barren: 20.2, urban: 45.8 },
-    { month: "Dec'25", water: 5.8, vegetation: 26.2, barren: 20.5, urban: 47.5 },
-    { month: "Jan'26", water: 5.5, vegetation: 25.5, barren: 19.5, urban: 49.5 }
-  ],
-  bhopal: [
-    { month: "Feb'25", water: 8.5, vegetation: 28.5, barren: 15.5, urban: 47.5 },
-    { month: "Mar'25", water: 7.8, vegetation: 26.8, barren: 17.8, urban: 47.6 },
-    { month: "Apr'25", water: 7.0, vegetation: 24.5, barren: 20.5, urban: 48.0 },
-    { month: "May'25", water: 6.2, vegetation: 22.0, barren: 23.8, urban: 48.0 },
-    { month: "Jun'25", water: 10.5, vegetation: 29.5, barren: 18.5, urban: 41.5 },
-    { month: "Jul'25", water: 14.2, vegetation: 36.8, barren: 13.5, urban: 35.5 },
-    { month: "Aug'25", water: 15.5, vegetation: 39.2, barren: 11.8, urban: 33.5 },
-    { month: "Sep'25", water: 13.8, vegetation: 36.5, barren: 13.5, urban: 36.2 },
-    { month: "Oct'25", water: 11.5, vegetation: 32.8, barren: 15.8, urban: 39.9 },
-    { month: "Nov'25", water: 10.2, vegetation: 30.5, barren: 16.8, urban: 42.5 },
-    { month: "Dec'25", water: 9.5, vegetation: 29.5, barren: 16.5, urban: 44.5 },
-    { month: "Jan'26", water: 8.8, vegetation: 29.0, barren: 16.0, urban: 46.2 }
-  ],
-  patna: [
-    { month: "Feb'25", water: 8.8, vegetation: 30.5, barren: 15.2, urban: 45.5 },
-    { month: "Mar'25", water: 8.2, vegetation: 28.8, barren: 17.5, urban: 45.5 },
-    { month: "Apr'25", water: 7.5, vegetation: 26.5, barren: 20.5, urban: 45.5 },
-    { month: "May'25", water: 6.8, vegetation: 24.2, barren: 23.5, urban: 45.5 },
-    { month: "Jun'25", water: 11.5, vegetation: 31.5, barren: 18.5, urban: 38.5 },
-    { month: "Jul'25", water: 15.2, vegetation: 38.8, barren: 12.5, urban: 33.5 },
-    { month: "Aug'25", water: 17.5, vegetation: 42.5, barren: 10.5, urban: 29.5 },
-    { month: "Sep'25", water: 15.8, vegetation: 39.8, barren: 12.2, urban: 32.2 },
-    { month: "Oct'25", water: 12.8, vegetation: 35.5, barren: 14.8, urban: 36.9 },
-    { month: "Nov'25", water: 10.8, vegetation: 33.2, barren: 16.5, urban: 39.5 },
-    { month: "Dec'25", water: 9.8, vegetation: 32.0, barren: 16.2, urban: 42.0 },
-    { month: "Jan'26", water: 9.2, vegetation: 31.2, barren: 15.8, urban: 43.8 }
-  ],
-  nagpur: [
-    { month: "Feb'25", water: 4.8, vegetation: 26.5, barren: 18.2, urban: 50.5 },
-    { month: "Mar'25", water: 4.2, vegetation: 24.8, barren: 20.5, urban: 50.5 },
-    { month: "Apr'25", water: 3.5, vegetation: 22.5, barren: 23.5, urban: 50.5 },
-    { month: "May'25", water: 2.8, vegetation: 19.8, barren: 27.2, urban: 50.2 },
-    { month: "Jun'25", water: 6.5, vegetation: 27.5, barren: 21.5, urban: 44.5 },
-    { month: "Jul'25", water: 10.2, vegetation: 35.8, barren: 15.5, urban: 38.5 },
-    { month: "Aug'25", water: 11.8, vegetation: 38.5, barren: 13.2, urban: 36.5 },
-    { month: "Sep'25", water: 10.5, vegetation: 36.2, barren: 15.0, urban: 38.3 },
-    { month: "Oct'25", water: 8.2, vegetation: 32.5, barren: 17.5, urban: 41.8 },
-    { month: "Nov'25", water: 6.8, vegetation: 29.8, barren: 19.2, urban: 44.2 },
-    { month: "Dec'25", water: 5.8, vegetation: 28.2, barren: 19.5, urban: 46.5 },
-    { month: "Jan'26", water: 5.2, vegetation: 27.5, barren: 18.8, urban: 48.5 }
-  ],
-  ranchi: [
-    { month: "Feb'25", water: 6.5, vegetation: 35.8, barren: 16.2, urban: 41.5 },
-    { month: "Mar'25", water: 5.8, vegetation: 33.5, barren: 18.5, urban: 42.2 },
-    { month: "Apr'25", water: 5.0, vegetation: 30.8, barren: 21.5, urban: 42.7 },
-    { month: "May'25", water: 4.2, vegetation: 27.5, barren: 25.0, urban: 43.3 },
-    { month: "Jun'25", water: 9.5, vegetation: 36.5, barren: 18.5, urban: 35.5 },
-    { month: "Jul'25", water: 13.5, vegetation: 44.5, barren: 12.5, urban: 29.5 },
-    { month: "Aug'25", water: 15.2, vegetation: 47.8, barren: 10.5, urban: 26.5 },
-    { month: "Sep'25", water: 13.8, vegetation: 45.5, barren: 12.2, urban: 28.5 },
-    { month: "Oct'25", water: 11.2, vegetation: 41.8, barren: 14.8, urban: 32.2 },
-    { month: "Nov'25", water: 9.2, vegetation: 39.5, barren: 16.2, urban: 35.1 },
-    { month: "Dec'25", water: 7.8, vegetation: 37.8, barren: 16.8, urban: 37.6 },
-    { month: "Jan'26", water: 7.0, vegetation: 36.5, barren: 16.5, urban: 40.0 }
-  ],
-  jammu: [
-    { month: "Feb'25", water: 4.5, vegetation: 22.5, barren: 28.5, urban: 44.5 },
-    { month: "Mar'25", water: 5.2, vegetation: 26.8, barren: 25.5, urban: 42.5 },
-    { month: "Apr'25", water: 6.5, vegetation: 32.5, barren: 21.5, urban: 39.5 },
-    { month: "May'25", water: 7.2, vegetation: 35.8, barren: 19.5, urban: 37.5 },
-    { month: "Jun'25", water: 8.5, vegetation: 38.5, barren: 17.5, urban: 35.5 },
-    { month: "Jul'25", water: 10.8, vegetation: 42.5, barren: 14.2, urban: 32.5 },
-    { month: "Aug'25", water: 11.5, vegetation: 44.8, barren: 12.5, urban: 31.2 },
-    { month: "Sep'25", water: 10.2, vegetation: 42.2, barren: 14.5, urban: 33.1 },
-    { month: "Oct'25", water: 8.5, vegetation: 37.5, barren: 17.8, urban: 36.2 },
-    { month: "Nov'25", water: 6.8, vegetation: 32.5, barren: 22.2, urban: 38.5 },
-    { month: "Dec'25", water: 5.5, vegetation: 27.5, barren: 26.0, urban: 41.0 },
-    { month: "Jan'26", water: 4.8, vegetation: 24.2, barren: 27.5, urban: 43.5 }
-  ],
-  nashik: [
-    { month: "Feb'25", water: 5.5, vegetation: 24.5, barren: 20.5, urban: 49.5 },
-    { month: "Mar'25", water: 4.8, vegetation: 22.8, barren: 22.8, urban: 49.6 },
-    { month: "Apr'25", water: 4.0, vegetation: 20.5, barren: 25.5, urban: 50.0 },
-    { month: "May'25", water: 3.5, vegetation: 18.0, barren: 28.5, urban: 50.0 },
-    { month: "Jun'25", water: 7.5, vegetation: 27.5, barren: 21.5, urban: 43.5 },
-    { month: "Jul'25", water: 11.5, vegetation: 35.8, barren: 16.2, urban: 36.5 },
-    { month: "Aug'25", water: 13.2, vegetation: 38.5, barren: 14.3, urban: 34.0 },
-    { month: "Sep'25", water: 11.8, vegetation: 36.2, barren: 16.0, urban: 36.0 },
-    { month: "Oct'25", water: 9.2, vegetation: 31.5, barren: 18.8, urban: 40.5 },
-    { month: "Nov'25", water: 7.5, vegetation: 28.5, barren: 20.5, urban: 43.5 },
-    { month: "Dec'25", water: 6.5, vegetation: 26.5, barren: 21.0, urban: 46.0 },
-    { month: "Jan'26", water: 6.0, vegetation: 25.5, barren: 20.8, urban: 47.7 }
-  ]
-};
+import { availableCities, loadMultipleCities, cityMetadata } from './utils/csvLoader';
 
 const COLORS = {
   water: '#06b6d4',
@@ -272,25 +10,46 @@ const COLORS = {
 };
 
 export default function LandCoverDashboard() {
-  const [selectedCities, setSelectedCities] = useState(['mumbai', 'delhi', 'bangalore']);
-  const [viewMode, setViewMode] = useState('trend'); // trend, comparison, distribution
+  const [selectedCities, setSelectedCities] = useState(['mumbai']);
+  const [viewMode, setViewMode] = useState('trend');
+  const [cityData, setCityData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const cities = Object.keys(cityData);
+  const cities = availableCities;
+
+  // Load all city data on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const data = await loadMultipleCities(availableCities);
+        setCityData(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading city data:', err);
+        setError('Failed to load city data. Please refresh the page.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   const toggleCity = (city) => {
-    setSelectedCities(prev => 
-      prev.includes(city) 
-        ? prev.filter(c => c !== city)
-        : [...prev, city]
-    );
+    // Single city selection only
+    setSelectedCities([city]);
   };
 
   // Calculate average data across selected cities
   const aggregatedData = useMemo(() => {
-    if (selectedCities.length === 0) return [];
+    if (selectedCities.length === 0 || Object.keys(cityData).length === 0) return [];
     
     const monthData = {};
     selectedCities.forEach(city => {
+      if (!cityData[city] || cityData[city].length === 0) return;
+      
       cityData[city].forEach(entry => {
         if (!monthData[entry.month]) {
           monthData[entry.month] = { month: entry.month, water: 0, vegetation: 0, barren: 0, urban: 0, count: 0 };
@@ -310,7 +69,98 @@ export default function LandCoverDashboard() {
       barren: +(data.barren / data.count).toFixed(1),
       urban: +(data.urban / data.count).toFixed(1)
     }));
-  }, [selectedCities]);
+  }, [selectedCities, cityData]);
+
+  // Generate climate predictions based on latest data
+  const climatePredictions = useMemo(() => {
+    if (selectedCities.length === 0 || Object.keys(cityData).length === 0) return [];
+    
+    return selectedCities.map(city => {
+      if (!cityData[city] || cityData[city].length === 0) {
+        return {
+          city: city.charAt(0).toUpperCase() + city.slice(1),
+          prediction: 'No Data Available',
+          severity: 'moderate',
+          recommendations: ['Data not loaded yet'],
+          metrics: { water: 0, vegetation: 0, barren: 0, urban: 0 }
+        };
+      }
+      
+      const latest = cityData[city][cityData[city].length - 1];
+      const { water, vegetation, barren, urban } = latest;
+      
+      let prediction = '';
+      let severity = 'moderate';
+      let recommendations = [];
+      
+      // Rule-based predictions
+      if (vegetation < 20 && water < 10) {
+        prediction = 'Critical Environmental Stress';
+        severity = 'critical';
+        recommendations = [
+          'Urgent need for green space development',
+          'Water conservation measures required',
+          'Urban heat island mitigation needed'
+        ];
+      } else if (vegetation < 20) {
+        prediction = 'Low Vegetation Alert';
+        severity = 'warning';
+        recommendations = [
+          'Increase tree plantation drives',
+          'Develop urban parks and gardens',
+          'Implement rooftop greening'
+        ];
+      } else if (water < 10) {
+        prediction = 'Water Scarcity Risk';
+        severity = 'warning';
+        recommendations = [
+          'Enhance water body conservation',
+          'Rainwater harvesting initiatives',
+          'Wetland restoration projects'
+        ];
+      } else if (barren > 25) {
+        prediction = 'High Barren Land Coverage';
+        severity = 'warning';
+        recommendations = [
+          'Land reclamation projects needed',
+          'Convert barren land to green spaces',
+          'Soil conservation measures'
+        ];
+      } else if (urban > 60) {
+        prediction = 'High Urbanization Pressure';
+        severity = 'warning';
+        recommendations = [
+          'Sustainable urban planning required',
+          'Preserve remaining green corridors',
+          'Implement smart city solutions'
+        ];
+      } else if (vegetation >= 30 && water >= 10) {
+        prediction = 'Healthy Environmental Balance';
+        severity = 'good';
+        recommendations = [
+          'Maintain current conservation efforts',
+          'Continue monitoring land use changes',
+          'Promote sustainable development'
+        ];
+      } else {
+        prediction = 'Moderate Environmental Status';
+        severity = 'moderate';
+        recommendations = [
+          'Monitor vegetation and water levels',
+          'Implement preventive measures',
+          'Balance urban growth with conservation'
+        ];
+      }
+      
+      return {
+        city: city.charAt(0).toUpperCase() + city.slice(1),
+        prediction,
+        severity,
+        recommendations,
+        metrics: { water, vegetation, barren, urban }
+      };
+    });
+  }, [selectedCities, cityData]);
 
   // Latest month data for pie chart
   const latestData = useMemo(() => {
@@ -341,6 +191,16 @@ export default function LandCoverDashboard() {
   // City comparison data (latest month only)
   const cityComparisonData = useMemo(() => {
     return selectedCities.map(city => {
+      if (!cityData[city] || cityData[city].length === 0) {
+        return {
+          city: city.charAt(0).toUpperCase() + city.slice(1),
+          water: 0,
+          vegetation: 0,
+          barren: 0,
+          urban: 0
+        };
+      }
+      
       const latest = cityData[city][cityData[city].length - 1];
       return {
         city: city.charAt(0).toUpperCase() + city.slice(1),
@@ -350,7 +210,65 @@ export default function LandCoverDashboard() {
         urban: latest.urban
       };
     });
-  }, [selectedCities]);
+  }, [selectedCities, cityData]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+        color: '#f1f5f9',
+        fontFamily: '"DM Sans", sans-serif',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        gap: '1rem'
+      }}>
+        <div style={{ fontSize: '3rem' }}>🌍</div>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '600' }}>Loading city data...</h2>
+        <p style={{ color: '#94a3b8' }}>Please wait while we fetch the latest land cover information</p>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+        color: '#f1f5f9',
+        fontFamily: '"DM Sans", sans-serif',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        gap: '1rem',
+        padding: '2rem'
+      }}>
+        <div style={{ fontSize: '3rem' }}>⚠️</div>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#ef4444' }}>Error Loading Data</h2>
+        <p style={{ color: '#94a3b8', textAlign: 'center', maxWidth: '500px' }}>{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            padding: '0.75rem 2rem',
+            background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+            border: 'none',
+            borderRadius: '12px',
+            color: '#fff',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            fontWeight: '600'
+          }}
+        >
+          Refresh Page
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -427,37 +345,8 @@ export default function LandCoverDashboard() {
           <h3 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0 }}>
             🏙️ Select Cities
           </h3>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              onClick={() => setSelectedCities(cities)}
-              style={{
-                padding: '0.5rem 1rem',
-                background: 'rgba(6, 182, 212, 0.2)',
-                border: '1px solid #06b6d4',
-                borderRadius: '8px',
-                color: '#06b6d4',
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-                fontWeight: '500'
-              }}
-            >
-              Select All
-            </button>
-            <button
-              onClick={() => setSelectedCities([])}
-              style={{
-                padding: '0.5rem 1rem',
-                background: 'rgba(239, 68, 68, 0.2)',
-                border: '1px solid #ef4444',
-                borderRadius: '8px',
-                color: '#ef4444',
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-                fontWeight: '500'
-              }}
-            >
-              Clear All
-            </button>
+          <div style={{ fontSize: '0.875rem', color: '#94a3b8' }}>
+            Select one city to analyze
           </div>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
@@ -510,7 +399,7 @@ export default function LandCoverDashboard() {
                   {item.value}%
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
-                  Jan 2026 Average
+                  Latest Month Average
                 </div>
               </div>
             ))}
@@ -549,8 +438,8 @@ export default function LandCoverDashboard() {
           </div>
 
           {/* View Mode Toggle */}
-          <div style={{ marginBottom: '2rem', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-            {['trend', 'comparison', 'distribution'].map(mode => (
+          <div style={{ marginBottom: '2rem', display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {['trend', 'comparison', 'distribution', 'predictions'].map(mode => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}
@@ -570,7 +459,7 @@ export default function LandCoverDashboard() {
                   transition: 'all 0.3s ease'
                 }}
               >
-                {mode === 'trend' && '📈'} {mode === 'comparison' && '📊'} {mode === 'distribution' && '🥧'} {mode}
+                {mode === 'trend' && '📈'} {mode === 'comparison' && '📊'} {mode === 'distribution' && '🥧'} {mode === 'predictions' && '🔮'} {mode}
               </button>
             ))}
           </div>
@@ -587,7 +476,7 @@ export default function LandCoverDashboard() {
                     Stacked view showing how land types change over time. Each color represents a different land cover type.
                   </p>
                   <ResponsiveContainer width="100%" height={450}>
-                    <AreaChart data={aggregatedData} stackOffset="expand">
+                    <AreaChart data={aggregatedData}>
                       <defs>
                         <linearGradient id="colorWater" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor={COLORS.water} stopOpacity={0.9}/>
@@ -614,11 +503,12 @@ export default function LandCoverDashboard() {
                       />
                       <YAxis 
                         stroke="#94a3b8"
-                        tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
+                        domain={[0, 100]}
+                        tickFormatter={(value) => `${value}%`}
                         style={{ fontSize: '0.875rem' }}
                       />
                       <Tooltip 
-                        formatter={(value) => `${(value * 100).toFixed(1)}%`}
+                        formatter={(value) => `${value.toFixed(1)}%`}
                         contentStyle={{ 
                           background: 'rgba(15, 23, 42, 0.95)', 
                           border: '1px solid rgba(148, 163, 184, 0.2)',
@@ -688,9 +578,10 @@ export default function LandCoverDashboard() {
                         stroke="#94a3b8"
                         label={{ value: 'Percentage (%)', angle: -90, position: 'insideLeft', fill: '#94a3b8' }}
                         style={{ fontSize: '0.875rem' }}
+                        domain={[0, 100]}
                       />
                       <Tooltip 
-                        formatter={(value) => `${value}%`}
+                        formatter={(value) => `${value.toFixed(2)}%`}
                         contentStyle={{ 
                           background: 'rgba(15, 23, 42, 0.95)', 
                           border: '1px solid rgba(148, 163, 184, 0.2)',
@@ -750,7 +641,7 @@ export default function LandCoverDashboard() {
             {viewMode === 'comparison' && (
               <div className="card">
                 <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' }}>
-                  📊 City-wise Comparison (Jan 2026)
+                  📊 City-wise Comparison (Latest Month)
                 </h3>
                 <ResponsiveContainer width="100%" height={400}>
                   <BarChart data={cityComparisonData}>
@@ -779,7 +670,7 @@ export default function LandCoverDashboard() {
               <>
                 <div className="card">
                   <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' }}>
-                    🥧 Current Distribution (Jan 2026)
+                    🥧 Current Distribution (Latest Month)
                   </h3>
                   <ResponsiveContainer width="100%" height={400}>
                     <PieChart>
@@ -836,6 +727,93 @@ export default function LandCoverDashboard() {
                 </div>
               </>
             )}
+
+            {viewMode === 'predictions' && (
+              <div className="card" style={{ gridColumn: '1 / -1' }}>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem' }}>
+                  🔮 Climate & Environmental Predictions
+                </h3>
+                <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '2rem' }}>
+                  Rule-based predictions based on current land cover metrics. Analysis considers vegetation, water, and barren land coverage.
+                </p>
+                
+                {climatePredictions.map((pred, idx) => {
+                  const severityColors = {
+                    critical: { bg: 'rgba(239, 68, 68, 0.1)', border: '#ef4444', text: '#ef4444' },
+                    warning: { bg: 'rgba(245, 158, 11, 0.1)', border: '#f59e0b', text: '#f59e0b' },
+                    moderate: { bg: 'rgba(59, 130, 246, 0.1)', border: '#3b82f6', text: '#3b82f6' },
+                    good: { bg: 'rgba(16, 185, 129, 0.1)', border: '#10b981', text: '#10b981' }
+                  };
+                  
+                  const colors = severityColors[pred.severity];
+                  
+                  return (
+                    <div 
+                      key={idx}
+                      style={{
+                        background: colors.bg,
+                        border: `2px solid ${colors.border}`,
+                        borderRadius: '12px',
+                        padding: '1.5rem',
+                        marginBottom: '1.5rem'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+                        <div>
+                          <h4 style={{ fontSize: '1.25rem', fontWeight: '600', color: colors.text, marginBottom: '0.5rem' }}>
+                            {pred.city}
+                          </h4>
+                          <div style={{ fontSize: '1.1rem', fontWeight: '500', color: '#f1f5f9' }}>
+                            {pred.prediction}
+                          </div>
+                        </div>
+                        <div style={{
+                          padding: '0.5rem 1rem',
+                          background: colors.border,
+                          borderRadius: '20px',
+                          color: '#fff',
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          textTransform: 'uppercase'
+                        }}>
+                          {pred.severity}
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                        <div style={{ padding: '0.75rem', background: 'rgba(6, 182, 212, 0.2)', borderRadius: '8px' }}>
+                          <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Water</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: '700', color: COLORS.water }}>{pred.metrics.water}%</div>
+                        </div>
+                        <div style={{ padding: '0.75rem', background: 'rgba(16, 185, 129, 0.2)', borderRadius: '8px' }}>
+                          <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Vegetation</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: '700', color: COLORS.vegetation }}>{pred.metrics.vegetation}%</div>
+                        </div>
+                        <div style={{ padding: '0.75rem', background: 'rgba(245, 158, 11, 0.2)', borderRadius: '8px' }}>
+                          <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Barren</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: '700', color: COLORS.barren }}>{pred.metrics.barren}%</div>
+                        </div>
+                        <div style={{ padding: '0.75rem', background: 'rgba(139, 92, 246, 0.2)', borderRadius: '8px' }}>
+                          <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Urban</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: '700', color: COLORS.urban }}>{pred.metrics.urban}%</div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#94a3b8', marginBottom: '0.75rem' }}>
+                          📋 Recommendations:
+                        </div>
+                        <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#cbd5e1' }}>
+                          {pred.recommendations.map((rec, i) => (
+                            <li key={i} style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>{rec}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Summary Stats */}
@@ -858,7 +836,7 @@ export default function LandCoverDashboard() {
               </div>
               <div style={{ padding: '1rem', background: 'rgba(139, 92, 246, 0.1)', borderRadius: '8px' }}>
                 <div style={{ fontSize: '0.875rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Last Updated</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: COLORS.urban }}>Jan 2026</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: COLORS.urban }}>Latest</div>
               </div>
             </div>
           </div>
