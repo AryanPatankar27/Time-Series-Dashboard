@@ -332,7 +332,7 @@ export default function LandCoverDashboard() {
           marginBottom: '0.5rem',
           letterSpacing: '-0.02em'
         }}>
-          Land Cover Analytics
+          Multimodal Satellite Analysis for Climate Monitoring
         </h1>
         <p style={{ color: '#94a3b8', fontSize: '1.1rem' }}>
           Real-time monitoring across {cities.length} major Indian cities
